@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Checklist de Equipamentos - Eventos</title>
+<style>
+  :root{
+    --bg:#f5f4f1;
+    --panel:#ffffff;
+    --ink:#1f2420;
+    --muted:#6b6f6a;
+    --line:#dedcd4;
+    --accent:#2f5d4f;
+    --accent-ink:#ffffff;
+    --danger:#a3402f;
+    --cat-som:#2f5d4f;
+    --cat-luz:#8a5a1f;
+    --cat-estrutura:#3c4a6b;
+    --cat-outros:#5f5a52;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  header{
+    padding:28px 32px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+  nav{
+    display:flex;
+    gap:8px;
+    padding:14px 32px 0;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  nav button{
+    border:none;
+    background:transparent;
+    padding:10px 16px;
+    font-size:14px;
+    color:var(--muted);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    font-weight:500;
+  }
+  nav button.active{
+    color:var(--accent);
+    border-bottom:2px solid var(--accent);
+  }
+  main{
+    max-width:960px;
+    margin:0 auto;
+    padding:28px 32px 80px;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px 22px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    margin:0 0 14px;
+    font-size:16px;
+    font-weight:600;
+  }
+  .row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    flex:1;
+    min-width:140px;
+  }
+  .field label{
+    font-size:12px;
+    color:var(--muted);
+  }
+  input, select{
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:14px;
+    background:#fff;
+    color:var(--ink);
+  }
+  button.primary{
+    background:var(--accent);
+    color:var(--accent-ink);
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    font-size:14px;
+    cursor:pointer;
+    font-weight:500;
+  }
+  button.primary:hover{opacity:.9;}
+  button.ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:9px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+  }
+  button.link-danger{
+    background:none;
+    border:none;
+    color:var(--danger);
+    cursor:pointer;
+    font-size:13px;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+  th, td{
+    text-align:left;
+    padding:9px 6px;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    color:var(--muted);
+    font-weight:500;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+  }
+  .tag{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:99px;
+    font-size:11px;
+    font-weight:600;
+    color:#fff;
+  }
+  .tag.som{background:var(--cat-som);}
+  .tag.luz{background:var(--cat-luz);}
+  .tag.estrutura{background:var(--cat-estrutura);}
+  .tag.outros{background:var(--cat-outros);}
+  .empty{
+    color:var(--muted);
+    font-size:14px;
+    padding:20px 0;
+    text-align:center;
+  }
+  .event-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .event-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+  }
+  .event-item .info b{font-size:14px;}
+  .event-item .info div{font-size:12px;color:var(--muted);margin-top:2px;}
+  .event-item .actions{display:flex;gap:8px;}
+  .item-select-row{
+    display:grid;
+    grid-template-columns:26px 1fr 90px 100px;
+    gap:10px;
+    align-items:center;
+    padding:8px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .item-select-row:last-child{border-bottom:none;}
+  .item-select-row input[type=number]{width:80px;}
+  .print-header{display:none;}
+  .toast{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:var(--ink);
+    color:#fff;
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:13px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:.25s;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  #tabela-financeiro tfoot th{
+    border-top:2px solid var(--line);
+    font-size:14px;
+    color:var(--ink);
+  }
+  #financeiro-total{
+    font-size:16px;
+  }
+
+  @media print{
+    nav, header, .no-print, #view-financeiro,
+    #view-estoque, #view-eventos,
+    #lista-selecao > .item-select-row{display:none !important;}
+    body{background:#fff;}
+    main{max-width:100%;padding:0;margin:0;}
+    .card{border:none;padding:0;margin:0;}
+    .print-header{
+      display:block;
+      margin-bottom:18px;
+      border-bottom:2px solid #000;
+      padding-bottom:10px;
+    }
+    .print-header h1{font-size:20px;margin:0 0 4px;}
+    .print-header div{font-size:13px;color:#333;}
+    table{font-size:13px;}
+    th{color:#000;}
+    .tag{color:#000 !important;background:none !important;border:1px solid #000;}
+  }
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <h1>Checklist de equipamentos</h1>
+  <p>Cadastre seu estoque de som e iluminação e monte a lista de cada evento para imprimir.</p>
+</header>
+
+<nav class="no-print" style="justify-content:space-between;">
+  <div style="display:flex;">
+    <button data-view="estoque" class="active">Estoque</button>
+    <button data-view="eventos">Eventos</button>
+    <button data-view="montagem">Montar lista</button>
+    <button data-view="financeiro">Financeiro</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;">
+    <button class="ghost" id="btn-backup">Baixar backup</button>
+    <button class="ghost" id="btn-restaurar">Restaurar backup</button>
+    <input type="file" id="input-restaurar" accept="application/json" style="display:none;">
+  </div>
+</nav>
+
+<main>
+
+  <!-- ESTOQUE -->
+  <section id="view-estoque" class="view active">
+    <div class="card no-print">
+      <h2>Adicionar item ao estoque</h2>
+      <div class="row">
+        <div class="field">
+          <label for="item-nome">Nome do item</label>
+          <input id="item-nome" type="text" placeholder="Ex: Caixa ativa 15 pol">
+        </div>
+        <div class="field">
+          <label for="item-cat">Categoria</label>
+          <select id="item-cat">
+            <option value="som">Som</option>
+            <option value="luz">Iluminação</option>
+            <option value="estrutura">Estrutura</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="field" style="max-width:120px;">
+          <label for="item-qtd">Qtd. no estoque</label>
+          <input id="item-qtd" type="number" min="0" value="1">
+        </div>
+        <button class="primary" id="btn-add-item">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Itens cadastrados</h2>
+      <table id="tabela-estoque">
+        <thead>
+          <tr><th>Item</th><th>Categoria</th><th>Qtd. estoque</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="estoque-empty" style="display:none;">Nenhum item cadastrado ainda.</div>
+    </div>
+  </section>
+
+  <!-- EVENTOS -->
+  <section id="view-eventos" class="view">
+    <div class="card no-print">
+      <h2>Novo evento</h2>
+      <div class="row">
+        <div class="field">
+          <label for="ev-nome">Nome do evento</label>
+          <input id="ev-nome" type="text" placeholder="Ex: Casamento Ana e Pedro">
+        </div>
+        <div class="field">
+          <label for="ev-cliente">Cliente</label>
+          <input id="ev-cliente" type="text" placeholder="Nome do cliente">
+        </div>
+        <div class="field" style="max-width:170px;">
+          <label for="ev-data">Data</label>
+          <input id="ev-data" type="date">
+        </div>
+        <div class="field" style="max-width:170px;">
+          <label for="ev-local">Local</label>
+          <input id="ev-local" type="text" placeholder="Local">
+        </div>
+        <div class="field" style="max-width:170px;">
+          <label for="ev-valor">Valor do evento (R$)</label>
+          <input id="ev-valor" type="number" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <button class="primary" id="btn-add-evento">Criar evento</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Eventos cadastrados</h2>
+      <div class="event-list" id="lista-eventos"></div>
+      <div class="empty" id="eventos-empty" style="display:none;">Nenhum evento cadastrado ainda.</div>
+    </div>
+  </section>
+
+  <!-- MONTAGEM -->
+  <section id="view-montagem" class="view">
+    <div class="card no-print">
+      <h2>Selecionar evento</h2>
+      <div class="row">
+        <div class="field">
+          <label for="sel-evento">Evento</label>
+          <select id="sel-evento"><option value="">Escolha um evento...</option></select>
+        </div>
+        <button class="primary" id="btn-imprimir" style="margin-left:auto;">Imprimir lista</button>
+      </div>
+    </div>
+
+    <div class="card" id="card-montagem" style="display:none;">
+      <div class="print-header">
+        <h1 id="print-evento-nome"></h1>
+        <div id="print-evento-info"></div>
+        <div id="print-evento-valor" style="font-weight:600;margin-top:6px;"></div>
+      </div>
+      <h2 class="no-print">Itens do evento</h2>
+      <div id="lista-selecao"></div>
+    </div>
+  </section>
+
+
+  <!-- FINANCEIRO -->
+  <section id="view-financeiro" class="view">
+    <div class="card no-print">
+      <h2>Financeiro</h2>
+      <p style="margin:0;color:var(--muted);font-size:13px;">
+        Histórico financeiro dos eventos cadastrados. Os valores desta aba não aparecem na impressão da lista de equipamentos.
+      </p>
+    </div>
+
+    <div class="card no-print">
+      <h2>Histórico de eventos</h2>
+      <table id="tabela-financeiro">
+        <thead>
+          <tr>
+            <th>Evento</th>
+            <th>Cliente</th>
+            <th>Data</th>
+            <th>Local</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <th colspan="4" style="text-align:right;">TOTAL</th>
+            <th id="financeiro-total">R$ 0,00</th>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="empty" id="financeiro-empty" style="display:none;">Nenhum evento cadastrado ainda.</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_ESTOQUE = 'estoque:itens';
+const STORAGE_EVENTOS = 'eventos:lista';
+
+let estoque = [];
+let eventos = [];
+
+const catLabel = {som:'Som', luz:'Iluminação', estrutura:'Estrutura', outros:'Outros'};
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function loadData(){
+  try{
+    const r = localStorage.getItem(STORAGE_ESTOQUE);
+    estoque = r ? JSON.parse(r) : [];
+  }catch(e){ estoque = []; }
+  try{
+    const r2 = localStorage.getItem(STORAGE_EVENTOS);
+    eventos = r2 ? JSON.parse(r2) : [];
+  }catch(e){ eventos = []; }
+  eventos = eventos.map(ev => ({
+    ...ev,
+    valor: numericEventValue(ev.valor),
+    itens: ev.itens || {}
+  }));
+  renderEstoque();
+  renderEventos();
+  renderSelectEventos();
+  renderFinanceiro();
+}
+
+function saveEstoque(){
+  localStorage.setItem(STORAGE_ESTOQUE, JSON.stringify(estoque));
+}
+function saveEventos(){
+  localStorage.setItem(STORAGE_EVENTOS, JSON.stringify(eventos));
+}
+
+// ---------- Navegação ----------
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+// ---------- Estoque ----------
+function renderEstoque(){
+  const tbody = document.querySelector('#tabela-estoque tbody');
+  tbody.innerHTML = '';
+  document.getElementById('estoque-empty').style.display = estoque.length ? 'none' : 'block';
+  estoque.forEach(item=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.nome}</td>
+      <td><span class="tag ${item.categoria}">${catLabel[item.categoria]}</span></td>
+      <td>${item.qtd}</td>
+      <td class="no-print"><button class="link-danger" data-id="${item.id}">Remover</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button.link-danger').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      estoque = estoque.filter(i=>i.id !== b.dataset.id);
+      await saveEstoque();
+      renderEstoque();
+    });
+  });
+}
+
+document.getElementById('btn-add-item').addEventListener('click', async ()=>{
+  const nome = document.getElementById('item-nome').value.trim();
+  const categoria = document.getElementById('item-cat').value;
+  const qtd = parseInt(document.getElementById('item-qtd').value) || 0;
+  if(!nome){ toast('Digite o nome do item'); return; }
+  estoque.push({id:uid(), nome, categoria, qtd});
+  await saveEstoque();
+  document.getElementById('item-nome').value='';
+  document.getElementById('item-qtd').value=1;
+  renderEstoque();
+  renderMontagemItens(document.getElementById('sel-evento').value);
+  toast('Item adicionado');
+});
+
+// ---------- Eventos ----------
+function renderEventos(){
+  const list = document.getElementById('lista-eventos');
+  list.innerHTML = '';
+  document.getElementById('eventos-empty').style.display = eventos.length ? 'none' : 'block';
+  eventos.forEach(ev=>{
+    const div = document.createElement('div');
+    div.className = 'event-item';
+    div.innerHTML = `
+      <div class="info">
+        <b>${ev.nome}</b>
+        <div>${ev.cliente || 'Sem cliente'} ${ev.data ? '· '+formatDate(ev.data) : ''} ${ev.local ? '· '+ev.local : ''} ${formatCurrency(ev.valor) ? '· '+formatCurrency(ev.valor) : ''}</div>
+      </div>
+      <div class="actions">
+        <button class="ghost" data-id="${ev.id}" data-action="montar">Montar lista</button>
+        <button class="link-danger" data-id="${ev.id}" data-action="remover">Remover</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('button[data-action="remover"]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      eventos = eventos.filter(e=>e.id !== b.dataset.id);
+      await saveEventos();
+      renderEventos();
+      renderSelectEventos();
+      renderFinanceiro();
+    });
+  });
+  list.querySelectorAll('button[data-action="montar"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.querySelector('nav button[data-view="montagem"]').classList.add('active');
+      document.getElementById('view-montagem').classList.add('active');
+      document.getElementById('sel-evento').value = b.dataset.id;
+      renderMontagemItens(b.dataset.id);
+    });
+  });
+}
+
+function formatDate(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function formatCurrency(value){
+  const n = Number(value) || 0;
+  return n > 0 ? n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : '';
+}
+
+function numericEventValue(value){
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function renderFinanceiro(){
+  const tbody = document.querySelector('#tabela-financeiro tbody');
+  const empty = document.getElementById('financeiro-empty');
+  const totalEl = document.getElementById('financeiro-total');
+
+  tbody.innerHTML = '';
+  empty.style.display = eventos.length ? 'none' : 'block';
+
+  let total = 0;
+
+  [...eventos]
+    .sort((a,b) => (a.data || '').localeCompare(b.data || ''))
+    .forEach(ev => {
+      const valor = numericEventValue(ev.valor);
+      total += valor;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${ev.nome}</td>
+        <td>${ev.cliente || 'Sem cliente'}</td>
+        <td>${ev.data ? formatDate(ev.data) : '-'}</td>
+        <td>${ev.local || '-'}</td>
+        <td><strong>${formatCurrency(valor) || 'R$ 0,00'}</strong></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  totalEl.textContent = total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+
+document.getElementById('btn-add-evento').addEventListener('click', async ()=>{
+  const nome = document.getElementById('ev-nome').value.trim();
+  const cliente = document.getElementById('ev-cliente').value.trim();
+  const data = document.getElementById('ev-data').value;
+  const local = document.getElementById('ev-local').value.trim();
+  const valor = numericEventValue(document.getElementById('ev-valor').value);
+  if(!nome){ toast('Digite o nome do evento'); return; }
+  eventos.push({id:uid(), nome, cliente, data, local, valor, itens:{}});
+  await saveEventos();
+  document.getElementById('ev-nome').value='';
+  document.getElementById('ev-cliente').value='';
+  document.getElementById('ev-data').value='';
+  document.getElementById('ev-local').value='';
+  document.getElementById('ev-valor').value='';
+  renderEventos();
+  renderSelectEventos();
+  renderFinanceiro();
+  toast('Evento criado');
+});
+
+// ---------- Montagem / seleção de itens ----------
+function renderSelectEventos(){
+  const sel = document.getElementById('sel-evento');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Escolha um evento...</option>';
+  eventos.forEach(ev=>{
+    const opt = document.createElement('option');
+    opt.value = ev.id;
+    opt.textContent = ev.nome;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+
+document.getElementById('sel-evento').addEventListener('change', (e)=>{
+  renderMontagemItens(e.target.value);
+});
+
+function renderMontagemItens(eventoId){
+  const card = document.getElementById('card-montagem');
+  const container = document.getElementById('lista-selecao');
+  if(!eventoId){
+    card.style.display = 'none';
+    return;
+  }
+  const ev = eventos.find(e=>e.id === eventoId);
+  if(!ev){ card.style.display='none'; return; }
+
+  card.style.display = 'block';
+  document.getElementById('print-evento-nome').textContent = ev.nome;
+  document.getElementById('print-evento-info').textContent =
+    [ev.cliente ? 'Contratante: '+ev.cliente : '', ev.data ? 'Data: '+formatDate(ev.data) : '', ev.local ? 'Local: '+ev.local : '']
+    .filter(Boolean).join('   ·   ');
+
+  document.getElementById('print-evento-valor').textContent =
+    'Valor do evento: ' + (formatCurrency(ev.valor) || 'R$ 0,00');
+
+  container.innerHTML = '';
+
+  if(estoque.length === 0){
+    container.innerHTML = '<div class="empty">Cadastre itens no estoque primeiro.</div>';
+    return;
+  }
+
+  const header = document.createElement('div');
+  header.className = 'item-select-row no-print';
+  header.style.borderBottom = '1px solid var(--line)';
+  header.innerHTML = `<div></div><div style="font-size:12px;color:var(--muted);">ITEM</div><div style="font-size:12px;color:var(--muted);">QTD.</div><div></div>`;
+  container.appendChild(header);
+
+  estoque.forEach(item=>{
+    const selecionado = ev.itens && ev.itens[item.id] !== undefined;
+    const qtdSelecionada = selecionado ? ev.itens[item.id] : 1;
+
+    const row = document.createElement('div');
+    row.className = 'item-select-row';
+    row.innerHTML = `
+      <input type="checkbox" class="no-print chk-item" data-id="${item.id}" ${selecionado ? 'checked' : ''}>
+      <div>${item.nome} <span class="tag ${item.categoria}" style="margin-left:6px;">${catLabel[item.categoria]}</span></div>
+      <input type="number" class="qtd-item no-print" data-id="${item.id}" min="1" value="${qtdSelecionada}" ${selecionado ? '' : 'disabled'}>
+      <div class="print-only-qtd" style="display:none;"></div>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll('.chk-item').forEach(chk=>{
+    chk.addEventListener('change', async ()=>{
+      const id = chk.dataset.id;
+      const qtdInput = container.querySelector(`.qtd-item[data-id="${id}"]`);
+      if(chk.checked){
+        qtdInput.disabled = false;
+        ev.itens[id] = parseInt(qtdInput.value) || 1;
+      } else {
+        qtdInput.disabled = true;
+        delete ev.itens[id];
+      }
+      await saveEventos();
+    });
+  });
+
+  container.querySelectorAll('.qtd-item').forEach(inp=>{
+    inp.addEventListener('input', async ()=>{
+      const id = inp.dataset.id;
+      if(ev.itens && ev.itens[id] !== undefined){
+        ev.itens[id] = parseInt(inp.value) || 1;
+        await saveEventos();
+      }
+    });
+  });
+}
+
+// ---------- Impressão ----------
+document.getElementById('btn-imprimir').addEventListener('click', ()=>{
+  const eventoId = document.getElementById('sel-evento').value;
+  if(!eventoId){ toast('Escolha um evento primeiro'); return; }
+  const ev = eventos.find(e=>e.id === eventoId);
+  if(!ev || !ev.itens || Object.keys(ev.itens).length === 0){
+    toast('Selecione ao menos um item');
+    return;
+  }
+  buildPrintTable(ev);
+  window.print();
+});
+
+function buildPrintTable(ev){
+  const container = document.getElementById('lista-selecao');
+  let printTable = document.getElementById('tabela-impressao');
+  if(printTable) printTable.remove();
+
+  printTable = document.createElement('table');
+  printTable.id = 'tabela-impressao';
+  printTable.style.marginTop = '10px';
+  printTable.innerHTML = `
+    <thead><tr><th>Item</th><th>Categoria</th><th>Quantidade</th></tr></thead>
+    <tbody></tbody>
+  `;
+  const tbody = printTable.querySelector('tbody');
+  Object.entries(ev.itens).forEach(([itemId, qtd])=>{
+    const item = estoque.find(i=>i.id === itemId);
+    if(!item) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${item.nome}</td><td><span class="tag ${item.categoria}">${catLabel[item.categoria]}</span></td><td>${qtd}</td>`;
+    tbody.appendChild(tr);
+  });
+  container.appendChild(printTable);
+
+  // esconde os controles interativos apenas na impressão via classe no-print já existente
+}
+
+// ---------- Backup / Restaurar ----------
+document.getElementById('btn-backup').addEventListener('click', ()=>{
+  const dados = {
+    estoque,
+    eventos,
+    exportadoEm: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dataStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `backup-checklist-eventos-${dataStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup baixado');
+});
+
+document.getElementById('btn-restaurar').addEventListener('click', ()=>{
+  document.getElementById('input-restaurar').click();
+});
+
+document.getElementById('input-restaurar').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const dados = JSON.parse(evt.target.result);
+      if(!Array.isArray(dados.estoque) || !Array.isArray(dados.eventos)){
+        toast('Arquivo de backup inválido');
+        return;
+      }
+      const confirmar = confirm('Isso vai substituir os dados atuais pelos dados do backup. Continuar?');
+      if(!confirmar) return;
+      estoque = dados.estoque;
+      eventos = dados.eventos;
+      saveEstoque();
+      saveEventos();
+      renderEstoque();
+      renderEventos();
+      renderSelectEventos();
+      renderFinanceiro();
+      toast('Backup restaurado');
+    }catch(err){
+      toast('Não foi possível ler o arquivo');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+loadData();
+</script>
+
+</body>
+</html>
